@@ -1,0 +1,5 @@
+todo_project2/actions-runner/externals/node16_alpine/bin/node filter=lfs diff=lfs merge=lfs -text
+todo_project2/actions-runner/externals/node16/bin/node filter=lfs diff=lfs merge=lfs -text
+todo_project2/actions-runner/externals/node20/bin/node filter=lfs diff=lfs merge=lfs -text
+todo_project2/actions-runner/actions-runner-linux-x64-2.315.0.tar.gz filter=lfs diff=lfs merge=lfs -text
+todo_project2/actions-runner/externals/node20_alpine/bin/node filter=lfs diff=lfs merge=lfs -text
