@@ -12,7 +12,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y default-libmysqlclient-dev gcc
 
 # Copy the requirements file into the container at /app/
-COPY todo_project2/requirements.txt /app/
+COPY requirements.txt /app/
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
