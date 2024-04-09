@@ -1,25 +1,75 @@
-name: Python application
+name: CI/CD Pipeline with Kind
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Run tests
-      run: |
-        # add your test commands here
-        echo "Run tests here"
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Kind
+        run: |
+          curl -Lo kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+          chmod +x kind
+          sudo mv kind /usr/local/bin/kind
+
+      - name: Create Kind Cluster
+        run: |
+          kind create cluster
+
+      - name: Get Kubeconfig from Kind
+        run: |
+          kind get kubeconfig > $HOME/.kube/config
+
+      - name: Build Docker Image
+        run: |
+          docker build -t local/todo-app:v1 -f Dockerfile .
+
+      - name: Load Docker Image to Kind
+        run: |
+          kind load docker-image local/todo-app:v1
+
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Debugging Directory Structure
+        run: |
+          pwd
+          echo "Listing root directory contents:"
+          ls -la
+          echo "Attempting to list todo-app directory contents:"
+          ls -la todo-app/
+
+      - name: Deploy to Kubernetes using Helm
+        working-directory: ./todo-app
+        run: |
+          helm upgrade --install todo-app-release . --values values.yaml
+
+      - name: Test Deployment
+        run: |
+          kubectl get all
+
+      - name: Cleanup
+        if: always()
+        run: |
+          kind delete cluster
