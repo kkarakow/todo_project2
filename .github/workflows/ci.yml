@@ -38,7 +38,9 @@ jobs:
         run: kind get kubeconfig > $HOME/.kube/config
 
       - name: Build Docker Image
-        run: docker build -t local/todo-app:v1 .
+        run: |
+          docker build -t local/todo-app:v1 .
+        working-directory: ./todo_project2
 
       - name: Load Docker Image to Kind
         run: kind load docker-image local/todo-app:v1
