@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t local/todo-app:v1 .
+          docker build -t local/todo-app:v1 -f Dockerfile .
         working-directory: ./todo_project2
 
       - name: Load Docker Image to Kind
