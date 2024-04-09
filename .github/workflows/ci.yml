@@ -11,63 +11,66 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.10'
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
 
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r todo_project2/requirements.txt
+      working-directory: ./
 
-      - name: Install Kind
-        run: |
-          curl -Lo kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
-          chmod +x kind
-          sudo mv kind /usr/local/bin/kind
+    - name: Install Kind
+      run: |
+        curl -Lo kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+        chmod +x kind
+        sudo mv kind /usr/local/bin/kind
 
-      - name: Create Kind Cluster
-        run: kind create cluster
+    - name: Create Kind Cluster
+      run: kind create cluster
 
-      - name: Get Kubeconfig from Kind
-        run: kind get kubeconfig > $HOME/.kube/config
+    - name: Get Kubeconfig from Kind
+      run: kind get kubeconfig > $HOME/.kube/config
 
-      - name: Build Docker Image
-        run: |
-          docker build -t local/todo-app:v1 -f Dockerfile .
-        working-directory: ./todo_project2
+    - name: Build Docker Image
+      run: docker build -t local/todo-app:v1 -f Dockerfile .
+      working-directory: ./todo_project2  # Assuming Dockerfile and context are correct here
 
-      - name: Load Docker Image to Kind
-        run: kind load docker-image local/todo-app:v1
+    - name: Load Docker Image to Kind
+      run: kind load docker-image local/todo-app:v1
 
-      - name: Install Helm
-        run: |
-          curl -Lo helm.tar.gz https://get.helm.sh/helm-v3.10.1-linux-amd64.tar.gz
-          tar -zxvf helm.tar.gz
-          sudo mv linux-amd64/helm /usr/local/bin/helm
+    - name: Install Helm
+      run: |
+        curl -Lo helm.tar.gz https://get.helm.sh/helm-v3.10.1-linux-amd64.tar.gz
+        tar -zxvf helm.tar.gz
+        sudo mv linux-amd64/helm /usr/local/bin/helm
 
-      - name: Debugging Directory Structure
-        run: |
-          pwd
-          echo "Listing root directory contents:"
-          ls -la
-          echo "Attempting to list todo-app directory contents:"
-          ls -la todo-app/
+    - name: Debugging Directory Structure
+      run: |
+        pwd
+        echo "Listing root directory contents:"
+        ls -la
+        echo "Attempting to list todo-app directory contents:"
+        ls -la todo-app/
+      working-directory: ./todo_project2  # Ensure this is where todo-app folder is expected
 
-      - name: Deploy to Kubernetes using Helm
-        working-directory: ./todo-app
-        run: |
-          helm upgrade --install todo-app-release . --values values.yaml
+    - name: Deploy to Kubernetes using Helm
+      working-directory: ./todo_project2/todo-app  # Adjust this path based on your actual folder structure
+      run: |
+        helm upgrade --install todo-app-release . --values values.yaml
 
-      - name: Test Deployment
-        run: kubectl get all
+    - name: Test Deployment
+      run: kubectl get all
 
-      - name: Cleanup
-        if: always()
-        run: kind delete cluster
+    - name: Cleanup
+      if: always()
+      run: kind delete cluster
+
 
