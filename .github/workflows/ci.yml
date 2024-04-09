@@ -11,7 +11,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -33,24 +32,22 @@ jobs:
           sudo mv kind /usr/local/bin/kind
 
       - name: Create Kind Cluster
-        run: |
-          kind create cluster
+        run: kind create cluster
 
       - name: Get Kubeconfig from Kind
-        run: |
-          kind get kubeconfig > $HOME/.kube/config
+        run: kind get kubeconfig > $HOME/.kube/config
 
       - name: Build Docker Image
-        run: |
-          docker build -t local/todo-app:v1 -f Dockerfile .
+        run: docker build -t local/todo-app:v1 .
 
       - name: Load Docker Image to Kind
-        run: |
-          kind load docker-image local/todo-app:v1
+        run: kind load docker-image local/todo-app:v1
 
       - name: Install Helm
         run: |
-          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          curl -Lo helm.tar.gz https://get.helm.sh/helm-v3.10.1-linux-amd64.tar.gz
+          tar -zxvf helm.tar.gz
+          sudo mv linux-amd64/helm /usr/local/bin/helm
 
       - name: Debugging Directory Structure
         run: |
@@ -66,10 +63,9 @@ jobs:
           helm upgrade --install todo-app-release . --values values.yaml
 
       - name: Test Deployment
-        run: |
-          kubectl get all
+        run: kubectl get all
 
       - name: Cleanup
         if: always()
-        run: |
-          kind delete cluster
+        run: kind delete cluster
+
